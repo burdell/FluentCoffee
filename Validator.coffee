@@ -1,0 +1,2 @@
+Validator = ->
+	return "Hello world"

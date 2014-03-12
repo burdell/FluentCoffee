@@ -1,0 +1,15 @@
+{
+	"folders":
+	[
+		{
+			"follow_symlinks": true,
+			"path": "."
+		}
+	],
+	"settings":
+	{
+		"noWrapper": true,
+		"compileOnSave": true,
+		"compileDir": "out"
+	}
+}
