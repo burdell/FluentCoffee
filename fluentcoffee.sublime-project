@@ -1,0 +1,14 @@
+{
+    "folders":
+    [
+    ],
+    "settings":
+    {
+        "CoffeeScript":
+        {
+            "noWrapper": true,
+            "compileOnSave": true,
+            "compileDir": "output"
+        }
+    }
+}
