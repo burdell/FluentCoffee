@@ -10,37 +10,54 @@ class Validator
 
 class Validation 
 	@currentField = null
+	@currentValue = null
+	
 	constructor: (@itemToValidate, @validationErrors, @KillFunction) ->
 
+	#helpers
 	AddError: (errorMessage) ->
 		@validationErrors.push { field: @currentField,  message: errorMessage }
+	Validate: (valid, message) ->
+		if @currentValue? and not valid then @AddError "#{@currentField} #{message}"
 
 	For: (type, itemToValidate) -> 
 		@KillFunction(type, itemToValidate)
 
-	#basic validators
-	GreaterThan: (compareTo, baseValue) ->
-		baseValue > compareTo
-	LessThan: (compareTo, baseValue) ->
-		baseValue < compareTo
-	Between: (floor, ceiling, baseValue) ->
-		GreaterThan(floor, baseValue) and LessThan(ceiling, baseValue)
-	EqualTo: (compareTo, baseValue) ->
-		baseValue is valueToCompare
+	#value validators
+	GreaterThan: (compareValue) ->
+		@Validate @currentValue > compareValue, "must be greater than #{compareValue}"
+		return @
+	LessThan: (compareValue) ->
+		@Validate @currentValue < compareValue, "must be less than #{compareValue}" 
+		return @
+	Between: (floor, ceiling) ->
+		@Validate @currentValue > floor and @currentValue < ceiling, "must be between #{floor} and #{ceiling}"
+		return @
+	EqualTo: (compareValue) ->
+		@Validate @currentValue is compareValue, "must be #{compareValue}"
+		return @
+
+	#string validators
+	Contains: (substring) ->
+		@Validate @currentValue.indexOf(substring) > -1, "must contain #{substring}"
+		return @
 	
 class ObjectValidation extends Validation
 	CurrentFieldExists: ->
 		@itemToValidate[@currentField]?
-	
-	#Validate = (validateFn, errorMessage, functionArgs...) ->
-	#	if CurrentFieldExists() and not validateFn.apply @, functionArgs then @AddError errorMessage
 
+	SetCurrent: (fieldName, required) ->
+		@currentField = fieldName
+		@currentValue = null
+
+		if @CurrentFieldExists then @currentValue = @itemToValidate[@currentField]
+		else if required then @AddError("#{@currentField} is required")
+
+	#existance operations
 	Require: (fieldName) ->
-		@currentField = fieldName
-
-		if not @CurrentFieldExists() then @AddError("#{@currentField} is required")
+		@SetCurrent(fieldName, true)
 		return @
-
 	Optional: (fieldName) ->
-		@currentField = fieldName
+		@SetCurrent(fieldName)
 		return @
+

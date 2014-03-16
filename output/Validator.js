@@ -28,6 +28,8 @@ Validator = (function() {
 Validation = (function() {
   Validation.currentField = null;
 
+  Validation.currentValue = null;
+
   function Validation(itemToValidate, validationErrors, KillFunction) {
     this.itemToValidate = itemToValidate;
     this.validationErrors = validationErrors;
@@ -41,24 +43,39 @@ Validation = (function() {
     });
   };
 
+  Validation.prototype.Validate = function(valid, message) {
+    if ((this.currentValue != null) && !valid) {
+      return this.AddError("" + this.currentField + " " + message);
+    }
+  };
+
   Validation.prototype.For = function(type, itemToValidate) {
     return this.KillFunction(type, itemToValidate);
   };
 
-  Validation.prototype.GreaterThan = function(compareTo, baseValue) {
-    return baseValue > compareTo;
+  Validation.prototype.GreaterThan = function(compareValue) {
+    this.Validate(this.currentValue > compareValue, "must be greater than " + compareValue);
+    return this;
   };
 
-  Validation.prototype.LessThan = function(compareTo, baseValue) {
-    return baseValue < compareTo;
+  Validation.prototype.LessThan = function(compareValue) {
+    this.Validate(this.currentValue < compareValue, "must be less than " + compareValue);
+    return this;
   };
 
-  Validation.prototype.Between = function(floor, ceiling, baseValue) {
-    return GreaterThan(floor, baseValue) && LessThan(ceiling, baseValue);
+  Validation.prototype.Between = function(floor, ceiling) {
+    this.Validate(this.currentValue > floor && this.currentValue < ceiling, "must be between " + floor + " and " + ceiling);
+    return this;
   };
 
-  Validation.prototype.EqualTo = function(compareTo, baseValue) {
-    return baseValue === valueToCompare;
+  Validation.prototype.EqualTo = function(compareValue) {
+    this.Validate(this.currentValue === compareValue, "must be " + compareValue);
+    return this;
+  };
+
+  Validation.prototype.Contains = function(substring) {
+    this.Validate(this.currentValue.indexOf(substring) > -1, "must contain " + substring);
+    return this;
   };
 
   return Validation;
@@ -76,16 +93,23 @@ ObjectValidation = (function(_super) {
     return this.itemToValidate[this.currentField] != null;
   };
 
-  ObjectValidation.prototype.Require = function(fieldName) {
+  ObjectValidation.prototype.SetCurrent = function(fieldName, required) {
     this.currentField = fieldName;
-    if (!this.CurrentFieldExists()) {
-      this.AddError("" + this.currentField + " is required");
+    this.currentValue = null;
+    if (this.CurrentFieldExists) {
+      return this.currentValue = this.itemToValidate[this.currentField];
+    } else if (required) {
+      return this.AddError("" + this.currentField + " is required");
     }
+  };
+
+  ObjectValidation.prototype.Require = function(fieldName) {
+    this.SetCurrent(fieldName, true);
     return this;
   };
 
   ObjectValidation.prototype.Optional = function(fieldName) {
-    this.currentField = fieldName;
+    this.SetCurrent(fieldName);
     return this;
   };
 
