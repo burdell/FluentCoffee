@@ -2,56 +2,66 @@
 class Validator 
 	validationErrors = []
 
-	GetValidation = (type, itemToValidate) ->
-		return new ObjectValidation(itemToValidate, validationErrors, @For) if "Object"
+	GetValidation = (itemToValidate) ->
+		typeOf = typeof itemToValidate
+		return new ObjectValidation(itemToValidate, validationErrors, @For) if typeOf is "object" and itemToValidate != null
+		return new FunctionValidation(itemToValidate, validationErrors, @For) if typeOf is "function"
+		return new Validation(itemToValidate, validationErrors, @For, true)
 
-	For: (type, itemToValidate) ->
-		validation = new GetValidation(type, itemToValidate)
+	For: (itemToValidate) ->
+		new GetValidation(itemToValidate)
 
 class Validation 
-	@currentField = null
+	@itemOption = null
 	@currentValue = null
 	
-	constructor: (@itemToValidate, @validationErrors, @KillFunction) ->
-
-	#helpers
+	constructor: (@itemToValidate, @validationErrors, @KillFunction, @isPrimitiveValue) ->
+		@currentValue = @itemToValidate if @isPrimitiveValue
+		@itemOption = "Value" if @isPrimitiveValue
+		
 	AddError: (errorMessage) ->
-		@validationErrors.push { field: @currentField,  message: errorMessage }
-	Validate: (valid, message) ->
-		if @currentValue? and not valid then @AddError "#{@currentField} #{message}"
+		@validationErrors.push { field: @itemOption,  message: errorMessage }
+	Validate: (isValid, message) ->
+		if @currentValue? or @isPrimitiveValue and not isValid() then @AddError "#{@itemOption} #{message}"
 
-	For: (type, itemToValidate) -> 
-		@KillFunction(type, itemToValidate)
+	#KILL FUNCTION >;D
+	For: (itemToValidate) -> 
+		@KillFunction(itemToValidate)
+
+	Assert: ->
+		valid: @validationErrors.length is 0
+		errors: @validationErrors
 
 	#value validators
 	GreaterThan: (compareValue) ->
-		@Validate @currentValue > compareValue, "must be greater than #{compareValue}"
+		@Validate ( -> @currentValue > compareValue ), "must be greater than #{compareValue}"
 		return @
 	LessThan: (compareValue) ->
-		@Validate @currentValue < compareValue, "must be less than #{compareValue}" 
+		@Validate ( -> @currentValue < compareValue ), "must be less than #{compareValue}" 
 		return @
 	Between: (floor, ceiling) ->
-		@Validate @currentValue > floor and @currentValue < ceiling, "must be between #{floor} and #{ceiling}"
+		@Validate ( -> @currentValue > floor and @currentValue < ceiling ), "must be between #{floor} and #{ceiling}"
 		return @
 	EqualTo: (compareValue) ->
-		@Validate @currentValue is compareValue, "must be #{compareValue}"
+		@Validate ( -> @currentValue is compareValue ), "must be #{compareValue}"
 		return @
 
 	#string validators
 	Contains: (substring) ->
-		@Validate @currentValue.indexOf(substring) > -1, "must contain #{substring}"
+		currentValue = @currentValue
+		@Validate ( ->  currentValue.indexOf(substring) > -1 ), "must contain #{substring}" 
 		return @
-	
+
 class ObjectValidation extends Validation
-	CurrentFieldExists: ->
-		@itemToValidate[@currentField]?
+	itemOptionExists: ->
+		@itemToValidate[@itemOption]?
 
 	SetCurrent: (fieldName, required) ->
-		@currentField = fieldName
+		@itemOption = fieldName
 		@currentValue = null
 
-		if @CurrentFieldExists then @currentValue = @itemToValidate[@currentField]
-		else if required then @AddError("#{@currentField} is required")
+		if @itemOptionExists then @currentValue = @itemToValidate[@itemOption]
+		else if required then @AddError("#{@itemOption} is required")
 
 	#existance operations
 	Require: (fieldName) ->
@@ -60,4 +70,8 @@ class ObjectValidation extends Validation
 	Optional: (fieldName) ->
 		@SetCurrent(fieldName)
 		return @
+
+class FunctionValidation extends Validation
+	WithParameters: (parameters...) ->
+		@itemOption = parameters
 
