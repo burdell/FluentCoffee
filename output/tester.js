@@ -7,28 +7,28 @@ var objMe = {
 	favoriteCereal: "Honey Bunches of Oats"
 };
 
-var fnMe = function() {
-	return "LOL DIS ME"
-}
-
-var fnReturnObj = function() {
-	return {
-		name: "Nathan",
-		age: 24
-	}
-}
-
-var param1 = "HOW", param2 = "NOW", param3 = "BROWN";
+var name = "Nathan Griffin";
+var age = 24;
+var job = "Code Ninja";
 
 var validation = validator
 	.For(objMe)
 		.Require("age")
-			.GreaterThan(30)
+			.LessThan(30)
 		.Require("address")
 			.Contains("Atlanta")
 			.Contains("GA")
 		.Optional("job")
 			.Contains("Ninja")
+			.Contains("Code")
+	.For(name)
+		.Contains("Griffin")
+	.For(age)
+		.Between(20, 40)
+	.For(job)
+		.Contains("Ninja")
+	.For(age)
+		.GreaterThan(20)
 	.Assert();
 
 console.log(validation)
