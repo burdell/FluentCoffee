@@ -15,7 +15,7 @@ class Validation
 	@itemOption = null
 	@currentValue = null
 
-	constructor: (@itemToValidate, @validationErrors, @KillFunction, @isPrimitiveValue) ->
+	constructor: (@itemToValidate, @validationErrors, @newValidation, @isPrimitiveValue) ->
 		@currentValue = @itemToValidate if @isPrimitiveValue
 		@itemOption = "Value" if @isPrimitiveValue
 		
@@ -27,7 +27,7 @@ class Validation
 
 	#KILL FUNCTION >;D
 	For: (itemToValidate) => 
-		@KillFunction(itemToValidate)
+		@newValidation(itemToValidate)
 
 	Assert: ->
 		valid: @validationErrors.length is 0
@@ -73,5 +73,5 @@ class ObjectValidation extends Validation
 
 class FunctionValidation extends Validation
 	WithParameters: (parameters...) ->
-		@itemOption = parameters
-
+		result = @itemToValidate(parameters...)
+		@newValidation(result)

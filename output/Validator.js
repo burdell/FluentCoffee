@@ -37,10 +37,10 @@ Validation = (function() {
 
   Validation.currentValue = null;
 
-  function Validation(itemToValidate, validationErrors, KillFunction, isPrimitiveValue) {
+  function Validation(itemToValidate, validationErrors, newValidation, isPrimitiveValue) {
     this.itemToValidate = itemToValidate;
     this.validationErrors = validationErrors;
-    this.KillFunction = KillFunction;
+    this.newValidation = newValidation;
     this.isPrimitiveValue = isPrimitiveValue;
     this.For = __bind(this.For, this);
     if (this.isPrimitiveValue) {
@@ -65,7 +65,7 @@ Validation = (function() {
   };
 
   Validation.prototype.For = function(itemToValidate) {
-    return this.KillFunction(itemToValidate);
+    return this.newValidation(itemToValidate);
   };
 
   Validation.prototype.Assert = function() {
@@ -167,9 +167,10 @@ FunctionValidation = (function(_super) {
   }
 
   FunctionValidation.prototype.WithParameters = function() {
-    var parameters;
+    var parameters, result;
     parameters = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-    return this.itemOption = parameters;
+    result = this.itemToValidate.apply(this, parameters);
+    return this.newValidation(result);
   };
 
   return FunctionValidation;

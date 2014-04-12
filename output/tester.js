@@ -1,4 +1,4 @@
-var validator = new Validator();
+
 var objMe = {
 	name: "Nathan Griffin",
 	age: 24,
@@ -7,10 +7,23 @@ var objMe = {
 	favoriteCereal: "Honey Bunches of Oats"
 };
 
-var name = "Nathan Griffin";
-var age = 24;
-var job = "Code Ninja";
+var objBurdell = {
+	name: "George P. Burdell",
+	job: "trollol",
+	age: 87,
+	favoriteCereal: "Fruit Loops"
+};
 
+var identityFunction = function(isBurdell){
+	return (isBurdell ? objBurdell : objMe);
+};
+
+
+var age = 24, 
+	name = "Nathan Griffin",
+	job = "Code Ninja";
+
+var validator = new Validator();
 var validation = validator
 	.For(objMe)
 		.Require("age")
@@ -29,6 +42,13 @@ var validation = validator
 		.Contains("Ninja")
 	.For(age)
 		.GreaterThan(20)
+	.For(identityFunction).WithParameters(true)
+		.Require("name").EqualTo("George P. Burdell")
+		.Require("job").EqualTo("trollol")
+		.Require("age").LessThan(90)
+	.For(identityFunction).WithParameters()
+		.Require("name").Contains("Griffin")
+		.Require("age").LessThan(30)
 	.Assert();
 
 console.log(validation)
