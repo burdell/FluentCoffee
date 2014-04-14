@@ -5,35 +5,37 @@ class Validator
 	For: (itemToValidate) ->
 		GetValidation(itemToValidate)
 
-	GetValidation = (itemToValidate) =>
+	GetValidation = (itemToValidate, itemName) =>
 		typeOf = typeof itemToValidate
 
-		return new ObjectValidation(itemToValidate, validationErrors, GetValidation) if typeOf is "object" and not isArray(itemToValidate) and itemToValidate?
-		return new FunctionValidation(itemToValidate, validationErrors, GetValidation) if typeOf is "function"
-		return new Validation(itemToValidate, validationErrors, GetValidation, true)
+		return new ObjectValidation(itemToValidate, validationErrors, GetValidation, itemName) if typeOf is "object" and not isArray(itemToValidate) and itemToValidate?
+		return new FunctionValidation(itemToValidate, validationErrors, GetValidation, itemName) if typeOf is "function"
+		return new Validation(itemToValidate, validationErrors, GetValidation, itemName, true)
 
 class Validation 
-	@itemOption = null
+	@itemName = null
 	@currentValue = null
 	@validateLength = false
 
-	constructor: (@itemToValidate, @validationErrors, @newValidation, @isPrimitiveValue) ->
+	constructor: (@itemToValidate, @validationErrors, @newValidation, @itemName, @isPrimitiveValue) ->
 		@currentValue = @itemToValidate if @isPrimitiveValue
-		@itemOption = "Value" if @isPrimitiveValue
+		@itemName = "Value" if not @itemName
 
 		@getValidationValue = ->
-			if @validateLength then validationValue = @currentValue.length
+			if @validateLength 
+			then return @currentValue.length else return @currentValue
 		
 	AddError: (errorMessage) ->
-		@validationErrors.push { field: @itemOption,  message: errorMessage }
+		@validationErrors.push { value: @itemName,  message: errorMessage }
 
 	Validate: (isValid, message) ->
-		if @currentValue? and not isValid() then @AddError "#{@itemOption} #{message}"
+		itemNameError = (if not @validateLength then "" else "The length of ") + @itemName  
+		if @currentValue? and not isValid() then @AddError "#{itemNameError} #{message}"
 		@validateLength = false
 
 	#KILL FUNCTION >;D
 	For: (itemToValidate, itemName) => 
-		@newValidation(itemToValidate)
+		@newValidation(itemToValidate, itemName)
 
 	Assert: ->
 		valid: @validationErrors.length is 0
@@ -62,14 +64,14 @@ class Validation
 
 class ObjectValidation extends Validation
 	itemOptionExists: ->
-		@itemToValidate[@itemOption]?
+		@itemToValidate[@itemName]?
 
 	SetCurrent: (fieldName, required) ->
-		@itemOption = fieldName
+		@itemName = fieldName
 		@currentValue = null
 
-		if @itemOptionExists then @currentValue = @itemToValidate[@itemOption]
-		else if required then @AddError("#{@itemOption} is required")
+		if @itemOptionExists then @currentValue = @itemToValidate[@itemName]
+		else if required then @AddError("#{@itemName} is required")
 
 	#existance operations
 	Require: (fieldName) ->

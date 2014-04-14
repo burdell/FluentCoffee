@@ -14,13 +14,13 @@ var testString = "HOW NOW BROWN COW";
 
 var validation = validator
 	.For(test)
-		.Require("name").Length().GreaterThan(3)
+		.Require("name").Length().GreaterThan(30)
 		.Require("address").Contains("1234")
-	.For(testArray)
-		.Contains(2)
+	.For(testArray, "Test Array")
+		.Contains(20)
 		.Length().GreaterThan(3)
-	.For(testString)
-		.Length().GreaterThan(10)
+	.For(testString, "Stupid saying")
+		.Length().GreaterThan(100)
 		.Contains("NOW")
 	.Assert();
 

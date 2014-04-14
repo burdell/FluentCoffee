@@ -16,16 +16,16 @@ Validator = (function() {
     return GetValidation(itemToValidate);
   };
 
-  GetValidation = function(itemToValidate) {
+  GetValidation = function(itemToValidate, itemName) {
     var typeOf;
     typeOf = typeof itemToValidate;
     if (typeOf === "object" && !isArray(itemToValidate) && (itemToValidate != null)) {
-      return new ObjectValidation(itemToValidate, validationErrors, GetValidation);
+      return new ObjectValidation(itemToValidate, validationErrors, GetValidation, itemName);
     }
     if (typeOf === "function") {
-      return new FunctionValidation(itemToValidate, validationErrors, GetValidation);
+      return new FunctionValidation(itemToValidate, validationErrors, GetValidation, itemName);
     }
-    return new Validation(itemToValidate, validationErrors, GetValidation, true);
+    return new Validation(itemToValidate, validationErrors, GetValidation, itemName, true);
   };
 
   return Validator;
@@ -33,48 +33,52 @@ Validator = (function() {
 })();
 
 Validation = (function() {
-  Validation.itemOption = null;
+  Validation.itemName = null;
 
   Validation.currentValue = null;
 
   Validation.validateLength = false;
 
-  function Validation(itemToValidate, validationErrors, newValidation, isPrimitiveValue) {
+  function Validation(itemToValidate, validationErrors, newValidation, itemName, isPrimitiveValue) {
     this.itemToValidate = itemToValidate;
     this.validationErrors = validationErrors;
     this.newValidation = newValidation;
+    this.itemName = itemName;
     this.isPrimitiveValue = isPrimitiveValue;
     this.For = __bind(this.For, this);
     if (this.isPrimitiveValue) {
       this.currentValue = this.itemToValidate;
     }
-    if (this.isPrimitiveValue) {
-      this.itemOption = "Value";
+    if (!this.itemName) {
+      this.itemName = "Value";
     }
     this.getValidationValue = function() {
-      var validationValue;
       if (this.validateLength) {
-        return validationValue = this.currentValue.length;
+        return this.currentValue.length;
+      } else {
+        return this.currentValue;
       }
     };
   }
 
   Validation.prototype.AddError = function(errorMessage) {
     return this.validationErrors.push({
-      field: this.itemOption,
+      value: this.itemName,
       message: errorMessage
     });
   };
 
   Validation.prototype.Validate = function(isValid, message) {
+    var itemNameError;
+    itemNameError = (!this.validateLength ? "" : "The length of ") + this.itemName;
     if ((this.currentValue != null) && !isValid()) {
-      this.AddError("" + this.itemOption + " " + message);
+      this.AddError("" + itemNameError + " " + message);
     }
     return this.validateLength = false;
   };
 
   Validation.prototype.For = function(itemToValidate, itemName) {
-    return this.newValidation(itemToValidate);
+    return this.newValidation(itemToValidate, itemName);
   };
 
   Validation.prototype.Assert = function() {
@@ -146,16 +150,16 @@ ObjectValidation = (function(_super) {
   }
 
   ObjectValidation.prototype.itemOptionExists = function() {
-    return this.itemToValidate[this.itemOption] != null;
+    return this.itemToValidate[this.itemName] != null;
   };
 
   ObjectValidation.prototype.SetCurrent = function(fieldName, required) {
-    this.itemOption = fieldName;
+    this.itemName = fieldName;
     this.currentValue = null;
     if (this.itemOptionExists) {
-      return this.currentValue = this.itemToValidate[this.itemOption];
+      return this.currentValue = this.itemToValidate[this.itemName];
     } else if (required) {
-      return this.AddError("" + this.itemOption + " is required");
+      return this.AddError("" + this.itemName + " is required");
     }
   };
 
