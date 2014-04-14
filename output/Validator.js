@@ -6,26 +6,29 @@ var FunctionValidation, ObjectValidation, Validation, Validator, isArray,
   __slice = [].slice;
 
 Validator = (function() {
-  var GetValidation, validationErrors;
+  var GetValidation, validationOptions;
 
   function Validator() {}
-
-  validationErrors = [];
-
-  Validator.prototype.For = function(itemToValidate) {
-    return GetValidation(itemToValidate);
-  };
 
   GetValidation = function(itemToValidate, itemName) {
     var typeOf;
     typeOf = typeof itemToValidate;
     if (typeOf === "object" && !isArray(itemToValidate) && (itemToValidate != null)) {
-      return new ObjectValidation(itemToValidate, validationErrors, GetValidation, itemName);
+      return new ObjectValidation(itemToValidate, validationOptions, itemName);
     }
     if (typeOf === "function") {
-      return new FunctionValidation(itemToValidate, validationErrors, GetValidation, itemName);
+      return new FunctionValidation(itemToValidate, validationOptions(itemName));
     }
-    return new Validation(itemToValidate, validationErrors, GetValidation, itemName, true);
+    return new Validation(itemToValidate, validationOptions, itemName, true);
+  };
+
+  validationOptions = {
+    newValidation: GetValidation,
+    errorList: []
+  };
+
+  Validator.prototype.For = function(itemToValidate, itemName) {
+    return GetValidation(itemToValidate, itemName);
   };
 
   return Validator;
@@ -39,10 +42,8 @@ Validation = (function() {
 
   Validation.validateLength = false;
 
-  function Validation(itemToValidate, validationErrors, newValidation, itemName, isPrimitiveValue) {
+  function Validation(itemToValidate, validationOptions, itemName, isPrimitiveValue) {
     this.itemToValidate = itemToValidate;
-    this.validationErrors = validationErrors;
-    this.newValidation = newValidation;
     this.itemName = itemName;
     this.isPrimitiveValue = isPrimitiveValue;
     this.For = __bind(this.For, this);
@@ -52,6 +53,8 @@ Validation = (function() {
     if (!this.itemName) {
       this.itemName = "Value";
     }
+    this.validationErrors = validationOptions.errorList;
+    this.newValidation = validationOptions.newValidation;
     this.getValidationValue = function() {
       if (this.validateLength) {
         return this.currentValue.length;

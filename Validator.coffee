@@ -1,30 +1,35 @@
 
 class Validator 
-	validationErrors = []
-
-	For: (itemToValidate) ->
-		GetValidation(itemToValidate)
-
 	GetValidation = (itemToValidate, itemName) =>
 		typeOf = typeof itemToValidate
+		
+		return new ObjectValidation(itemToValidate, validationOptions, itemName) if typeOf is "object" and not isArray(itemToValidate) and itemToValidate?
+		return new FunctionValidation(itemToValidate, validationOptions itemName) if typeOf is "function"
+		return new Validation(itemToValidate, validationOptions, itemName, true)
 
-		return new ObjectValidation(itemToValidate, validationErrors, GetValidation, itemName) if typeOf is "object" and not isArray(itemToValidate) and itemToValidate?
-		return new FunctionValidation(itemToValidate, validationErrors, GetValidation, itemName) if typeOf is "function"
-		return new Validation(itemToValidate, validationErrors, GetValidation, itemName, true)
+	validationOptions = 
+		newValidation: GetValidation
+		errorList: []
+	
+	For: (itemToValidate, itemName) ->
+		GetValidation(itemToValidate, itemName)
 
 class Validation 
 	@itemName = null
 	@currentValue = null
 	@validateLength = false
 
-	constructor: (@itemToValidate, @validationErrors, @newValidation, @itemName, @isPrimitiveValue) ->
+	constructor: (@itemToValidate, validationOptions, @itemName, @isPrimitiveValue) ->
 		@currentValue = @itemToValidate if @isPrimitiveValue
 		@itemName = "Value" if not @itemName
+		@validationErrors = validationOptions.errorList
+		@newValidation = validationOptions.newValidation
 
 		@getValidationValue = ->
 			if @validateLength 
 			then return @currentValue.length else return @currentValue
-		
+
+
 	AddError: (errorMessage) ->
 		@validationErrors.push { value: @itemName,  message: errorMessage }
 
