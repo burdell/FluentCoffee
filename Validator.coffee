@@ -4,7 +4,7 @@ class Validator
 		typeOf = typeof itemToValidate
 		
 		return new ObjectValidation(itemToValidate, validationOptions, itemName) if typeOf is "object" and not isArray(itemToValidate) and itemToValidate?
-		return new FunctionValidation(itemToValidate, validationOptions itemName) if typeOf is "function"
+		return new FunctionValidation(itemToValidate, validationOptions, itemName) if typeOf is "function"
 		return new Validation(itemToValidate, validationOptions, itemName, true)
 
 	validationOptions = 
@@ -15,9 +15,9 @@ class Validator
 		GetValidation(itemToValidate, itemName)
 
 class Validation 
-	@itemName = null
 	@currentValue = null
 	@validateLength = false
+	@applyNot = false
 
 	constructor: (@itemToValidate, validationOptions, @itemName, @isPrimitiveValue) ->
 		@currentValue = @itemToValidate if @isPrimitiveValue
@@ -25,18 +25,22 @@ class Validation
 		@validationErrors = validationOptions.errorList
 		@newValidation = validationOptions.newValidation
 
+		@Validate = (validateFn, message) ->
+			itemNameError = if @validateLength then "The length of #{@itemName}" else "#{@itemName}"
+			if @currentValue? and not @valid(validateFn) then @AddError "#{itemNameError} #{@generateErrorMessage(message)}"
+
+			@validateLength = false
+			@applyNot = false
+
 		@getValidationValue = ->
-			if @validateLength 
-			then return @currentValue.length else return @currentValue
+			if @validateLength then @currentValue.length else @currentValue
+		@valid = (validateFn) ->
+			if @applyNot then !validateFn() else validateFn()
+		@AddError = (errorMessage) ->
+			@validationErrors.push { value: @itemName,  message: errorMessage }
+		@generateErrorMessage = (errorMessage) ->
+			"must " + (if @applyNot then "not " else "") + errorMessage
 
-
-	AddError: (errorMessage) ->
-		@validationErrors.push { value: @itemName,  message: errorMessage }
-
-	Validate: (isValid, message) ->
-		itemNameError = (if not @validateLength then "" else "The length of ") + @itemName  
-		if @currentValue? and not isValid() then @AddError "#{itemNameError} #{message}"
-		@validateLength = false
 
 	#KILL FUNCTION >;D
 	For: (itemToValidate, itemName) => 
@@ -48,24 +52,29 @@ class Validation
 
 	#validators
 	GreaterThan: (compareValue) ->
-		@Validate ( => @getValidationValue() > compareValue ), "must be greater than #{compareValue}"
+		@Validate ( => @getValidationValue() > compareValue ), "be greater than #{compareValue}"
 		return @
 	LessThan: (compareValue) ->
-		@Validate ( => @getValidationValue() < compareValue ), "must be less than #{compareValue}" 
+		@Validate ( => @getValidationValue() < compareValue ), "be less than #{compareValue}" 
 		return @
 	Between: (floor, ceiling) ->
-		@Validate ( => @getValidationValue() > floor and @currentValue < ceiling ), "must be between #{floor} and #{ceiling}"
+		@Validate ( => @getValidationValue() > floor and @currentValue < ceiling ), "be between #{floor} and #{ceiling}"
 		return @
 	EqualTo: (compareValue) ->
-		@Validate ( => @getValidationValue() is compareValue ), "must be #{compareValue}"
+		@Validate ( => @getValidationValue() is compareValue ), "be #{compareValue}"
 		return @
 	Contains: (testItem) -> 
-		@Validate ( => @currentValue.indexOf(testItem) > -1 ), "must contain #{testItem}" 
+		@Validate ( => @currentValue.indexOf(testItem) > -1 ), "contain #{testItem}" 
 		return @
 
+	#qualifiers
 	Length: ->
 		@validateLength = true
 		return @
+	Not: ->
+		@applyNot = true
+		return @
+
 
 class ObjectValidation extends Validation
 	itemOptionExists: ->
@@ -94,6 +103,6 @@ class FunctionValidation extends Validation
 
 #HELPERS
 isArray = (item) ->
-	if Array.isArray then Array.isArray item else toString.call item == '[object Array]'
+	if Array.isArray then Array.isArray item else toString.call item is '[object Array]'
 
 

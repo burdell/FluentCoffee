@@ -17,7 +17,7 @@ Validator = (function() {
       return new ObjectValidation(itemToValidate, validationOptions, itemName);
     }
     if (typeOf === "function") {
-      return new FunctionValidation(itemToValidate, validationOptions(itemName));
+      return new FunctionValidation(itemToValidate, validationOptions, itemName);
     }
     return new Validation(itemToValidate, validationOptions, itemName, true);
   };
@@ -36,11 +36,11 @@ Validator = (function() {
 })();
 
 Validation = (function() {
-  Validation.itemName = null;
-
   Validation.currentValue = null;
 
   Validation.validateLength = false;
+
+  Validation.applyNot = false;
 
   function Validation(itemToValidate, validationOptions, itemName, isPrimitiveValue) {
     this.itemToValidate = itemToValidate;
@@ -55,6 +55,15 @@ Validation = (function() {
     }
     this.validationErrors = validationOptions.errorList;
     this.newValidation = validationOptions.newValidation;
+    this.Validate = function(validateFn, message) {
+      var itemNameError;
+      itemNameError = this.validateLength ? "The length of " + this.itemName : "" + this.itemName;
+      if ((this.currentValue != null) && !this.valid(validateFn)) {
+        this.AddError("" + itemNameError + " " + (this.generateErrorMessage(message)));
+      }
+      this.validateLength = false;
+      return this.applyNot = false;
+    };
     this.getValidationValue = function() {
       if (this.validateLength) {
         return this.currentValue.length;
@@ -62,23 +71,23 @@ Validation = (function() {
         return this.currentValue;
       }
     };
+    this.valid = function(validateFn) {
+      if (this.applyNot) {
+        return !validateFn();
+      } else {
+        return validateFn();
+      }
+    };
+    this.AddError = function(errorMessage) {
+      return this.validationErrors.push({
+        value: this.itemName,
+        message: errorMessage
+      });
+    };
+    this.generateErrorMessage = function(errorMessage) {
+      return "must " + (this.applyNot ? "not " : "") + errorMessage;
+    };
   }
-
-  Validation.prototype.AddError = function(errorMessage) {
-    return this.validationErrors.push({
-      value: this.itemName,
-      message: errorMessage
-    });
-  };
-
-  Validation.prototype.Validate = function(isValid, message) {
-    var itemNameError;
-    itemNameError = (!this.validateLength ? "" : "The length of ") + this.itemName;
-    if ((this.currentValue != null) && !isValid()) {
-      this.AddError("" + itemNameError + " " + message);
-    }
-    return this.validateLength = false;
-  };
 
   Validation.prototype.For = function(itemToValidate, itemName) {
     return this.newValidation(itemToValidate, itemName);
@@ -96,7 +105,7 @@ Validation = (function() {
       return function() {
         return _this.getValidationValue() > compareValue;
       };
-    })(this)), "must be greater than " + compareValue);
+    })(this)), "be greater than " + compareValue);
     return this;
   };
 
@@ -105,7 +114,7 @@ Validation = (function() {
       return function() {
         return _this.getValidationValue() < compareValue;
       };
-    })(this)), "must be less than " + compareValue);
+    })(this)), "be less than " + compareValue);
     return this;
   };
 
@@ -114,7 +123,7 @@ Validation = (function() {
       return function() {
         return _this.getValidationValue() > floor && _this.currentValue < ceiling;
       };
-    })(this)), "must be between " + floor + " and " + ceiling);
+    })(this)), "be between " + floor + " and " + ceiling);
     return this;
   };
 
@@ -123,7 +132,7 @@ Validation = (function() {
       return function() {
         return _this.getValidationValue() === compareValue;
       };
-    })(this)), "must be " + compareValue);
+    })(this)), "be " + compareValue);
     return this;
   };
 
@@ -132,12 +141,17 @@ Validation = (function() {
       return function() {
         return _this.currentValue.indexOf(testItem) > -1;
       };
-    })(this)), "must contain " + testItem);
+    })(this)), "contain " + testItem);
     return this;
   };
 
   Validation.prototype.Length = function() {
     this.validateLength = true;
+    return this;
+  };
+
+  Validation.prototype.Not = function() {
+    this.applyNot = true;
     return this;
   };
 
