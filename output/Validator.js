@@ -59,7 +59,7 @@ Validation = (function() {
       var itemNameError;
       itemNameError = this.validateLength ? "The length of " + this.itemName : "" + this.itemName;
       if ((this.currentValue != null) && !this.valid(validateFn)) {
-        this.AddError("" + itemNameError + " " + (this.generateErrorMessage(message)));
+        this.AddError(this.generateErrorMessage(this.itemName, message));
       }
       this.validateLength = false;
       return this.applyNot = false;
@@ -84,8 +84,8 @@ Validation = (function() {
         message: errorMessage
       });
     };
-    this.generateErrorMessage = function(errorMessage) {
-      return "must " + (this.applyNot ? "not " : "") + errorMessage;
+    this.generateErrorMessage = function(itemName, errorMessage) {
+      return (this.validateLength ? "The length of " : "") + ("" + itemName + " must ") + (this.applyNot ? "not " : "") + errorMessage;
     };
   }
 

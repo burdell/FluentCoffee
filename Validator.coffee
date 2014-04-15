@@ -27,7 +27,7 @@ class Validation
 
 		@Validate = (validateFn, message) ->
 			itemNameError = if @validateLength then "The length of #{@itemName}" else "#{@itemName}"
-			if @currentValue? and not @valid(validateFn) then @AddError "#{itemNameError} #{@generateErrorMessage(message)}"
+			if @currentValue? and not @valid(validateFn) then @AddError @generateErrorMessage(@itemName, message)
 
 			@validateLength = false
 			@applyNot = false
@@ -38,8 +38,8 @@ class Validation
 			if @applyNot then !validateFn() else validateFn()
 		@AddError = (errorMessage) ->
 			@validationErrors.push { value: @itemName,  message: errorMessage }
-		@generateErrorMessage = (errorMessage) ->
-			"must " + (if @applyNot then "not " else "") + errorMessage
+		@generateErrorMessage = (itemName, errorMessage) ->
+			(if @validateLength then "The length of " else "") + "#{itemName} must " + (if @applyNot then "not " else "") + errorMessage
 
 
 	#KILL FUNCTION >;D

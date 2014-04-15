@@ -35,7 +35,7 @@ var validation = validator
 			.Contains("Ninja")
 			.Contains("Code")
 	.For(name, "name").Contains("Griffin")
-	.For(age, "age").Between(20, 40)
+	.For(age, "age").Length().Between(20, 40)
 	.For(job, "job").Contains("Ninja")
 	.For(age).GreaterThan(20)
 	.For(identityFunction).WithParameters(true)
@@ -44,7 +44,7 @@ var validation = validator
 		.Require("age").LessThan(90)
 	.For(identityFunction).WithParameters()
 		.Require("name").Not().Contains("Griffin")
-		.Require("age").Not().GreaterThan(30)
+		.Require("age").Not().GreaterThan(1)
 	.Assert();
 
 console.log(validation)
