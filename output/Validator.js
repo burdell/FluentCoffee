@@ -56,8 +56,6 @@ Validation = (function() {
     this.validationErrors = validationOptions.errorList;
     this.newValidation = validationOptions.newValidation;
     this.Validate = function(validateFn, message) {
-      var itemNameError;
-      itemNameError = this.validateLength ? "The length of " + this.itemName : "" + this.itemName;
       if ((this.currentValue != null) && !this.valid(validateFn)) {
         this.AddError(this.generateErrorMessage(this.itemName, message));
       }
@@ -202,10 +200,17 @@ FunctionValidation = (function(_super) {
   }
 
   FunctionValidation.prototype.WithParameters = function() {
-    var parameters, result;
+    var itemToValidate, parameters, result, resultValidation;
     parameters = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-    result = this.itemToValidate.apply(this, parameters);
-    return this.newValidation(result);
+    itemToValidate = this.validatingFunction || this.itemToValidate;
+    result = itemToValidate.apply(null, parameters);
+    resultValidation = this.newValidation(result);
+    if (typeof result !== 'function') {
+
+    }
+    resultValidation.WithParameters = this.WithParameters;
+    resultValidation.validatingFunction = this.itemToValidate;
+    return resultValidation;
   };
 
   return FunctionValidation;

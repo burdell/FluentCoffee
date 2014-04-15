@@ -26,7 +26,6 @@ class Validation
 		@newValidation = validationOptions.newValidation
 
 		@Validate = (validateFn, message) ->
-			itemNameError = if @validateLength then "The length of #{@itemName}" else "#{@itemName}"
 			if @currentValue? and not @valid(validateFn) then @AddError @generateErrorMessage(@itemName, message)
 
 			@validateLength = false
@@ -34,10 +33,13 @@ class Validation
 
 		@getValidationValue = ->
 			if @validateLength then @currentValue.length else @currentValue
+
 		@valid = (validateFn) ->
 			if @applyNot then !validateFn() else validateFn()
+
 		@AddError = (errorMessage) ->
 			@validationErrors.push { value: @itemName,  message: errorMessage }
+			
 		@generateErrorMessage = (itemName, errorMessage) ->
 			(if @validateLength then "The length of " else "") + "#{itemName} must " + (if @applyNot then "not " else "") + errorMessage
 
@@ -97,8 +99,17 @@ class ObjectValidation extends Validation
 
 class FunctionValidation extends Validation
 	WithParameters: (parameters...) ->
-		result = @itemToValidate(parameters...)
-		@newValidation(result)
+		itemToValidate = @validatingFunction or @itemToValidate
+		result = itemToValidate(parameters...)
+		resultValidation = @newValidation(result)
+		
+		#so we dont have to repeat .For() when validating the result of functions
+		if typeof result != 'function' 
+		then 
+		resultValidation.WithParameters = @WithParameters
+		resultValidation.validatingFunction = @itemToValidate
+		
+		resultValidation
 
 
 #HELPERS
