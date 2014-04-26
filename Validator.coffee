@@ -1,5 +1,9 @@
 
 class Validator 
+		
+	constructor: () ->
+		validationOptions.errorList = []
+
 	GetValidation = (itemToValidate, itemName) =>
 		typeOf = typeof itemToValidate
 		
@@ -9,7 +13,6 @@ class Validator
 
 	validationOptions = 
 		newValidation: GetValidation
-		errorList: []
 	
 	For: (itemToValidate, itemName) ->
 		GetValidation(itemToValidate, itemName)
@@ -80,13 +83,15 @@ class Validation
 
 class ObjectValidation extends Validation
 	itemOptionExists: ->
-		@itemToValidate[@itemName]?
+		item = @itemToValidate[@itemName]
+		
+		item != null and item != undefined
 
 	SetCurrent: (fieldName, required) ->
 		@itemName = fieldName
 		@currentValue = null
-
-		if @itemOptionExists then @currentValue = @itemToValidate[@itemName]
+		
+		if @itemOptionExists() then @currentValue = @itemToValidate[@itemName]
 		else if required then @AddError("#{@itemName} is required")
 
 	#existance operations

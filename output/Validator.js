@@ -8,7 +8,9 @@ var FunctionValidation, ObjectValidation, Validation, Validator, isArray,
 Validator = (function() {
   var GetValidation, validationOptions;
 
-  function Validator() {}
+  function Validator() {
+    validationOptions.errorList = [];
+  }
 
   GetValidation = function(itemToValidate, itemName) {
     var typeOf;
@@ -23,8 +25,7 @@ Validator = (function() {
   };
 
   validationOptions = {
-    newValidation: GetValidation,
-    errorList: []
+    newValidation: GetValidation
   };
 
   Validator.prototype.For = function(itemToValidate, itemName) {
@@ -165,13 +166,15 @@ ObjectValidation = (function(_super) {
   }
 
   ObjectValidation.prototype.itemOptionExists = function() {
-    return this.itemToValidate[this.itemName] != null;
+    var item;
+    item = this.itemToValidate[this.itemName];
+    return item !== null && item !== void 0;
   };
 
   ObjectValidation.prototype.SetCurrent = function(fieldName, required) {
     this.itemName = fieldName;
     this.currentValue = null;
-    if (this.itemOptionExists) {
+    if (this.itemOptionExists()) {
       return this.currentValue = this.itemToValidate[this.itemName];
     } else if (required) {
       return this.AddError("" + this.itemName + " is required");

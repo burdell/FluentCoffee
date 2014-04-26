@@ -43,7 +43,7 @@ var validation = validator
 			.Require("name").Contains("Griffin")
 			.Require("age").Not().GreaterThan(60)
 	.For(name, "name").Contains("Griffin")
-	.For(age, "age").Between(20, 40)
+	.For(age, "age").Not().Between(20, 40)
 	.For(job, "job").Contains("Ninja")
 	.For(age).GreaterThan(20)
 	.Assert();
